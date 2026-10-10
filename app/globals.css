@@ -116,6 +116,9 @@ body::after {
 .hero-in .hero-copy > *:nth-child(3) { animation-delay: .24s; }
 .hero-in .hero-copy > *:nth-child(4) { animation-delay: .36s; }
 .hero-in .hero-copy > *:nth-child(5) { animation-delay: .48s; }
+/* the at-a-glance strip arrives last, once the hero copy has settled */
+.door-on .hero-strip { opacity: 0; }
+.hero-in .hero-strip { animation: rise 1.1s var(--ease-garden) 1.2s both; }
 @keyframes rise { from { opacity: 0; transform: translateY(22px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 
 .firefly { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #F4FFD9; box-shadow: 0 0 10px 3px rgb(201 226 186 / .6); opacity: 0;

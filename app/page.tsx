@@ -107,7 +107,7 @@ export default function Home() {
         </section>
 
         {/* ============================== AT A GLANCE — the 4 things visitors look for first ============================== */}
-        <div className="relative z-10 mx-auto -mt-20 max-w-6xl px-4 sm:-mt-24 sm:px-6 lg:px-8">
+        <div className="hero-strip relative z-10 mx-auto -mt-20 max-w-6xl px-4 sm:-mt-24 sm:px-6 lg:px-8">
           <dl className="grid grid-cols-2 overflow-hidden rounded-[1.75rem] bg-ivory shadow-lift ring-1 ring-evergreen/5 lg:grid-cols-4">
             {[
               { k: 'Today', v: <TodayHours />, href: '#visit' },
