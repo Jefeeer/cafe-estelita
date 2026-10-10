@@ -90,3 +90,20 @@ export function CopyButton({ text }: { text: string }) {
     </>
   );
 }
+
+/** Mobile action bar: stays out of the way on the hero (the info strip already has call/directions), slides in after. */
+export function ShowAfterHero({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShown(scrollY > innerHeight * 0.6);
+    onScroll();
+    addEventListener('scroll', onScroll, { passive: true });
+    return () => removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <div inert={!shown} className={`${className} transition duration-500 ease-[var(--ease-garden)] ${shown ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-6 opacity-0'}`}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {children}
+    </div>
+  );
+}

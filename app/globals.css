@@ -64,8 +64,8 @@ body::after {
 .site-header.is-scrolled { background: rgb(249 236 228 / .88); color: var(--color-ink); box-shadow: 0 1px 0 rgb(30 26 23 / .08), 0 10px 30px -18px rgb(27 47 43 / .45); backdrop-filter: saturate(1.4) blur(14px); }
 .site-header:not(.is-scrolled) { text-shadow: 0 1px 12px rgb(0 0 0 / .35); }
 .site-header.menu-open { color: var(--color-blush); background: transparent; box-shadow: none; backdrop-filter: none; }
-.nav-link { position: relative; padding: .5rem .25rem; }
-.nav-link::after { content: ""; position: absolute; left: .25rem; right: .25rem; bottom: .2rem; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease-garden); }
+.nav-link { position: relative; padding: .7rem .3rem; } /* ~44px touch target on tablets */
+.nav-link::after { content: ""; position: absolute; left: .25rem; right: .25rem; bottom: .45rem; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease-garden); }
 .nav-link:hover::after, .nav-link[aria-current="true"]::after { transform: scaleX(1); }
 
 .mobile-menu { visibility: hidden; opacity: 0; transition: opacity .35s var(--ease-garden), visibility 0s .35s; }

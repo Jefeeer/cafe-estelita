@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { SITE, HOURS, ABOUT_PHOTOS } from '@/lib/content';
 import Header, { PinIcon } from '@/components/Header';
 import OpenStatus, { HoursTable, TodayHours } from '@/components/OpenStatus';
-import { DoorIntro, Parallax, RevealObserver, CopyButton } from '@/components/Effects';
+import { DoorIntro, Parallax, RevealObserver, CopyButton, ShowAfterHero } from '@/components/Effects';
 import MenuSection from '@/components/MenuSection';
 import Gallery from '@/components/Gallery';
 import Testimonials from '@/components/Testimonials';
@@ -87,11 +87,11 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="relative mx-auto w-full max-w-7xl px-4 pb-32 pt-28 sm:px-6 sm:pb-40 lg:px-8">
+          <div className="relative mx-auto w-full max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pb-40 sm:pt-28 lg:px-8">
             <div className="hero-copy max-w-4xl">
               <p className="caps mb-4 text-xs text-mint sm:text-sm">{SITE.tagline}</p>
               <OpenStatus className="mb-6 inline-flex items-center gap-2 rounded-full border border-blush/30 bg-evergreen-night/50 px-4 py-1.5 text-sm backdrop-blur" />
-              <h1 id="heroTitle" className="display text-[clamp(2.3rem,min(7.2vw,8.6svh),5rem)]">
+              <h1 id="heroTitle" className="display text-[clamp(2.2rem,min(9.6vw,8.6svh),5rem)]">
                 Your <span className="text-mint">hidden garden</span> in the heart of Dasmariñas.
               </h1>
               <p className="mt-5 max-w-xl text-lg text-blush/90 sm:text-xl">Coffee, comfort food, and slow afternoons among the greens.</p>
@@ -339,7 +339,7 @@ export default function Home() {
       </footer>
 
       {/* ============================== MOBILE FLOATING ACTIONS ============================== */}
-      <div className="fixed inset-x-3 bottom-3 z-30 flex gap-2 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <ShowAfterHero className="fixed inset-x-3 bottom-3 z-30 flex gap-2 md:hidden">
         <a href={SITE.facebook} target="_blank" rel="noopener" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-evergreen px-4 py-3.5 text-sm font-semibold text-blush shadow-lift ring-1 ring-blush/10">
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.1 2 11.3c0 2.9 1.4 5.5 3.7 7.2V22l3.4-1.9c.9.3 1.9.4 2.9.4 5.5 0 10-4.1 10-9.2S17.5 2 12 2zm1 12.4-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7z" /></svg>
           Message us<span className="sr-only"> on Facebook (opens in new tab)</span>
@@ -347,7 +347,7 @@ export default function Home() {
         <a href={SITE.phoneHref} className="flex items-center justify-center gap-2 rounded-full bg-clay px-5 py-3.5 text-sm font-semibold text-white shadow-lift">
           <PhoneIcon /> Call
         </a>
-      </div>
+      </ShowAfterHero>
 
       <RevealObserver />
     </>
