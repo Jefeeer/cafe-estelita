@@ -32,7 +32,7 @@ export function statusText(s: Status | undefined, variant: 'short' | 'long') {
 export default function OpenStatus({ variant = 'long', className = '' }: { variant?: 'short' | 'long'; className?: string }) {
   const clock = useCafeClock();
   return (
-    <p className={`${className} ${clock?.status.open ? 'is-open' : ''}`}>
+    <p className={`${className} ${clock?.status.open ? 'status-open' : ''}`}>
       <span className="status-dot" aria-hidden="true" />
       <span>{statusText(clock?.status, variant)}</span>
     </p>

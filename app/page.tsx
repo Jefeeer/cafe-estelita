@@ -75,7 +75,7 @@ export default function Home() {
 
       <main id="main" tabIndex={-1}>
         {/* ============================== HERO ============================== */}
-        <section id="top" className="on-dark relative isolate flex min-h-[100svh] items-end overflow-hidden bg-evergreen-night text-blush" aria-labelledby="heroTitle">
+        <section id="top" className="on-dark relative isolate flex hero-h items-end overflow-hidden bg-evergreen-night text-blush" aria-labelledby="heroTitle">
           <Parallax>
             <Image src={SITE.heroImage} alt="Lush tropical leaves and hanging greenery filtering soft afternoon light, like the garden hidden behind Casa Estelita's walls"
               fill priority sizes="100vw" className="object-cover" />

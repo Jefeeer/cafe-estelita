@@ -70,7 +70,7 @@ body::after {
 
 .mobile-menu { visibility: hidden; opacity: 0; transition: opacity .35s var(--ease-garden), visibility 0s .35s; }
 .mobile-menu.is-open { visibility: visible; opacity: 1; transition: opacity .35s var(--ease-garden); }
-.mobile-menu .big { display: block; transform: translateY(14px); opacity: 0; transition: transform .55s var(--ease-garden), opacity .55s var(--ease-garden); }
+.mobile-menu .big { transform: translateY(14px); opacity: 0; transition: transform .55s var(--ease-garden), opacity .55s var(--ease-garden); }
 .mobile-menu.is-open .big { transform: none; opacity: 1; }
 .mobile-menu.is-open li:nth-child(2) .big { transition-delay: .05s; }
 .mobile-menu.is-open li:nth-child(3) .big { transition-delay: .1s; }
@@ -84,7 +84,7 @@ body::after {
 
 /* ============ Open/closed dot ============ */
 .status-dot { width: .55rem; height: .55rem; border-radius: 99px; background: var(--color-clay-soft); flex: none; }
-.is-open .status-dot { background: #7FD58C; animation: pulse 2.4s infinite; }
+.status-open .status-dot { background: #7FD58C; animation: pulse 2.4s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(127 213 140 / .6); } 70%, 100% { box-shadow: 0 0 0 8px rgb(127 213 140 / 0); } }
 
 /* ============ Door intro — the gray wall with the hanging logo ============ */
@@ -106,6 +106,11 @@ body::after {
 @keyframes breathe { 50% { opacity: .55; } }
 
 /* ============ Hero ============ */
+/* Full-screen only on landscape laptops/desktops; tall portrait screens size to the content so there is no empty band. */
+.hero-h { min-height: 72svh; }
+@media (min-width: 640px) { .hero-h { min-height: 86svh; } }
+@media (min-width: 1000px) and (orientation: portrait) { .hero-h { min-height: 70svh; } }
+@media (min-width: 1024px) and (orientation: landscape) { .hero-h { min-height: 100svh; } }
 .hero-media { position: absolute; inset: -12% 0; will-change: transform; }
 .hero-overlay { background:
   radial-gradient(120% 80% at 50% 110%, rgb(12 22 20 / .92) 0%, rgb(12 22 20 / 0) 60%),

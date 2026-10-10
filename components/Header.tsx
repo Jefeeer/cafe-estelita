@@ -91,9 +91,9 @@ export default function Header() {
           className="spin-slow pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 opacity-[.08]" />
         <nav aria-label="Mobile" className="relative flex min-h-full flex-col px-6 pb-10 pt-28" onClick={(e) => (e.target as HTMLElement).closest('a') && setOpen(false)}>
           <p className="caps mb-6 text-xs text-moss">{SITE.tagline}</p>
-          <ul className="space-y-3">
+          <ul className="border-t border-blush/10">
             {LINKS.map((l, i) => (
-              <li key={l.href}><a ref={i === 0 ? firstLinkRef : undefined} tabIndex={open ? 0 : -1} className="big display text-5xl" href={l.href}>{l.label}</a></li>
+              <li key={l.href}><a ref={i === 0 ? firstLinkRef : undefined} tabIndex={open ? 0 : -1} className="big display flex items-center justify-between border-b border-blush/10 py-4 text-[1.85rem] leading-none" href={l.href}>{l.label}<span className="text-base text-moss" aria-hidden="true">→</span></a></li>
             ))}
           </ul>
           <div className="mt-auto space-y-4 pt-12">
