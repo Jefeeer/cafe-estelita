@@ -10,7 +10,7 @@ const U = (id: string, w = 1200, h?: number) =>
 export const SITE = {
   name: 'Casa Estelita Garden Cafe',
   tagline: 'Relax ~ Chill ~ Unwind', // straight from the logo
-  url: 'https://case-estilita.vercel.app', // swap if you add a custom domain
+  url: 'https://casa-estelita.vercel.app', // swap if you add a custom domain
   phone: '0906 508 1467',
   phoneHref: 'tel:+639065081467',
   phoneIntl: '+63-906-508-1467',
