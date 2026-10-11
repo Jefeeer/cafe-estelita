@@ -95,9 +95,9 @@ export const MENU: Record<string, MenuItem[]> = {
 
 /* ---------- GALLERY ----------
    USE REAL PHOTOS FROM INSTAGRAM/FACEBOOK
-   cat must be one of: 'Vibe', 'Coffee', 'Food', 'Garden'.
+   (Fallback only — live photos and their categories are managed in /admin.)
    w / h = the photo's real proportions (prevents layout jumps). */
-export type Photo = { src: string; w: number; h: number; cat: 'Vibe' | 'Coffee' | 'Food' | 'Garden'; alt: string };
+export type Photo = { src: string; w: number; h: number; cat: string; alt: string };
 export const GALLERY: Photo[] = [
   { src: U('1600093463592-8e36ae95ef56', 1200, 1500), w: 1200, h: 1500, cat: 'Vibe', alt: 'Cafe interior with hanging plants, rattan and soft pendant lights' },
   { src: U('1509042239860-f550ce710b93', 1200, 1200), w: 1200, h: 1200, cat: 'Coffee', alt: 'Lattes with leaf art on a table beside fresh greenery' },

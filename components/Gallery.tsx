@@ -2,19 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { GALLERY } from '@/lib/content';
+import type { Photo } from '@/lib/content';
 import { setScrollLock } from './SmoothScroll';
 
-const FILTERS = ['All', 'Vibe', 'Coffee', 'Food', 'Garden'] as const;
 
-export default function Gallery() {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All');
+export default function Gallery({ photos, cats }: { photos: Photo[]; cats: string[] }) {
+  const [filter, setFilter] = useState('All');
   const [pos, setPos] = useState(0);
   const dlg = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLButtonElement | null>(null);
   const swipeX = useRef<number | null>(null);
 
-  const list = GALLERY.map((g, i) => ({ ...g, i })).filter((g) => filter === 'All' || g.cat === filter);
+  const list = photos.map((g, i) => ({ ...g, i })).filter((g) => filter === 'All' || g.cat === filter);
   const cur = list[pos];
   const step = (d: number) => setPos((p) => (p + d + list.length) % list.length);
 
@@ -35,7 +34,7 @@ export default function Gallery() {
   return (
     <>
       <div role="group" aria-label="Filter photos" className="flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
+        {['All', ...cats].map((f) => (
           <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)}
             className="pill rounded-full border border-evergreen/25 px-4 py-2 text-sm font-semibold text-evergreen hover:bg-evergreen/10">
             {f}

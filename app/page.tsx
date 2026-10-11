@@ -1,14 +1,16 @@
 import Image from 'next/image';
-import { SITE, HOURS, ABOUT_PHOTOS } from '@/lib/content';
+import { SITE, ABOUT_PHOTOS, type Day } from '@/lib/content';
+import { getSiteData } from '@/lib/site-data';
+import { fmtTime } from '@/lib/hours';
 import Header, { PinIcon } from '@/components/Header';
-import OpenStatus, { HoursTable, TodayHours } from '@/components/OpenStatus';
+import OpenStatus, { HoursProvider, HoursTable, TodayHours } from '@/components/OpenStatus';
 import { DoorIntro, Parallax, RevealObserver, CopyButton, ShowAfterHero } from '@/components/Effects';
 import MenuSection from '@/components/MenuSection';
 import Gallery from '@/components/Gallery';
 import Testimonials from '@/components/Testimonials';
 
-/* Structured data for Google — opening hours come straight from HOURS, so they never drift. */
-const jsonLd = {
+/* Structured data for Google — opening hours come straight from the admin hours, so they never drift. */
+const jsonLd = (week: Day[]) => ({
   '@context': 'https://schema.org',
   '@type': 'CafeOrCoffeeShop',
   name: SITE.name,
@@ -29,11 +31,11 @@ const jsonLd = {
     addressCountry: 'PH',
   },
   hasMap: SITE.directions,
-  openingHoursSpecification: HOURS.week
+  openingHoursSpecification: week
     .filter((d) => d.open && d.close)
     .map((d) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: d.day, opens: d.open, closes: d.close })),
   sameAs: [SITE.instagram, SITE.facebook],
-};
+});
 
 const PhoneIcon = ({ className = 'h-5 w-5' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -65,10 +67,12 @@ const FIREFLIES = [
   [72, 58, 17, 3], [86, 40, 13, 1.9], [66, 80, 15, 4], [6, 28, 19, 2.6],
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { menu, deals, gallery, galleryCats, week } = await getSiteData();
+  const opens = week.find((d) => d.open)?.open;
   return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+    <HoursProvider week={week}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(week)).replace(/</g, '\\u003c') }} />
       <a href="#main" className="skip-link rounded-full bg-ink px-5 py-3 font-medium text-blush shadow-soft">Skip to content</a>
       <DoorIntro />
       <Header />
@@ -145,7 +149,7 @@ export default function Home() {
                 <p>Our tree has deep roots and open branches, and that&apos;s the whole idea: good coffee, honest comfort food, and staff who greet you like family. <span className="display text-evergreen">Relax, chill, unwind.</span></p>
               </div>
               <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-evergreen/15 pt-8">
-                {[['Seating', 'Garden & indoor'], ['Per person', SITE.priceRange], ['Doors open', '3 PM']].map(([k, v]) => (
+                {[['Seating', 'Garden & indoor'], ['Per person', SITE.priceRange], ['Doors open', opens ? fmtTime(opens) : '—']].map(([k, v]) => (
                   <div key={k}><dt className="caps text-[.65rem] text-ink/75">{k}</dt><dd className="display mt-1.5 text-lg text-evergreen sm:text-xl">{v}</dd></div>
                 ))}
               </dl>
@@ -207,7 +211,7 @@ export default function Home() {
               </div>
               <p className="max-w-sm text-ink/80">A taste of what&apos;s on the counter. Ask our staff about today&apos;s pastries and seasonal drinks.</p>
             </div>
-            <MenuSection />
+            <MenuSection menu={menu} deals={deals} />
             <p className="mt-10 text-center text-sm text-ink/75">Prices in Philippine pesos and subject to change.</p>
           </div>
         </section>
@@ -219,7 +223,7 @@ export default function Home() {
               <Eyebrow n="04">The gallery</Eyebrow>
               <h2 id="galTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen">Moments <span className="text-clay">among the greens</span>.</h2>
             </div>
-            <Gallery />
+            <Gallery photos={gallery} cats={galleryCats} />
           </div>
         </section>
 
@@ -261,7 +265,7 @@ export default function Home() {
                 <div className="flex gap-4">
                   <dt className="mt-1 flex-none text-moss"><span className="sr-only">Opening hours</span>
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></dt>
-                  {/* CONFIRM FULL WEEKLY HOURS — table is generated from HOURS in lib/content.ts */}
+                  {/* edited in /admin → Opening hours */}
                   <dd className="w-full max-w-sm"><HoursTable /></dd>
                 </div>
                 <div className="flex gap-4">
@@ -350,6 +354,6 @@ export default function Home() {
       </ShowAfterHero>
 
       <RevealObserver />
-    </>
+    </HoursProvider>
   );
 }

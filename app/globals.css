@@ -175,3 +175,11 @@ dialog.lightbox::backdrop { background: rgb(12 22 20 / .94); backdrop-filter: bl
   .firefly { animation: none !important; opacity: .6; }
   .hero-media { transform: none !important; }
 }
+
+/* ============ Admin dashboard ============ */
+body:has(.admin-app) { background: #F5F3F0; }
+body:has(.admin-app)::after { display: none; } /* no paper grain on the dashboard */
+.admin-app :focus-visible { border-radius: 8px; }
+dialog.admin-drawer::backdrop { background: rgb(12 22 20 / .45); }
+dialog.admin-drawer[open] { animation: drawerIn .3s var(--ease-garden); }
+@keyframes drawerIn { from { transform: translateX(40px); opacity: 0; } }

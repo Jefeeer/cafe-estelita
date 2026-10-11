@@ -4,8 +4,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   images: {
-    // Placeholder photos. Once real photos live in /public, this can be removed.
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com", pathname: "/photo-**" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/photo-**" }, // placeholder photos
+      { protocol: "https", hostname: "qivysuescsscbwjaddgu.supabase.co", pathname: "/storage/v1/object/public/**" }, // /admin uploads
+    ],
   },
   turbopack: {
     rules: {

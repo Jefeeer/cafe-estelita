@@ -21,3 +21,13 @@ npm run build    # production build
 Real photos: put them in `public/photos/` and use paths like `'/photos/latte.jpg'` in `lib/content.ts`.
 
 `legacy/index.html` is the earlier single-file version, kept for reference.
+
+## Admin dashboard (`/admin`)
+
+Staff edit Deals & Bundles, Menu, Gallery and Opening Hours at `/admin`. Data lives in Supabase
+(`supabase/schema.sql`); `lib/content.ts` is only the fallback if the database is unreachable.
+
+- Env vars (local `.env.local` and Vercel): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Add a staff login: Supabase → Authentication → Add user (tick "Auto confirm"), then in the SQL editor:
+  `insert into public.admins select id from auth.users where email = 'staff@example.com';`
+- Change a password: Supabase → Authentication → Users → the user → Reset / update password.
