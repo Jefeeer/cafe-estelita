@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { CategoryRow, PhotoRow } from '@/lib/supabase';
-import { Badge, CategoryManager, Drawer, Empty, Field, Icon, PageHeader, Skeleton, Toggle, btn, input, move, uploadImage, useAdmin, useConfirm, useRows } from '../ui';
+import { Badge, CategoryManager, Drawer, Empty, Field, Icon, PageHeader, ChipsSkeleton, GridSkeleton, Toggle, btn, input, move, uploadImage, useAdmin, useRows } from '../ui';
 
 
 export default function GalleryPage() {
@@ -15,7 +15,6 @@ export default function GalleryPage() {
   const [pickedCat, setUpCat] = useState('');
   const [progress, setProgress] = useState<string>('');
   const fileRef = useRef<HTMLInputElement>(null);
-  const confirm = useConfirm();
 
   const cats = (catRows ?? []).map((c) => c.name);
   const upCat = cats.includes(pickedCat) ? pickedCat : cats[0] ?? '';
@@ -47,7 +46,7 @@ export default function GalleryPage() {
     if (await admin.save(() => admin.db.from('gallery_photos').update({ cat, alt: alt.trim(), visible }).eq('id', id))) { setDraft(null); reload(); }
   };
   const remove = async (p: PhotoRow) => {
-    if (!(await confirm.ask('Delete this photo?', 'It will be removed from the website gallery. To keep it for later, hide it instead.'))) return;
+    if (!(await admin.confirm({ title: 'Delete this photo?', text: 'It will be removed from the website gallery. To keep it for later, hide it instead.', action: 'Delete photo' }))) return;
     if (await admin.save(() => admin.db.from('gallery_photos').delete().eq('id', p.id), 'Photo deleted')) { setDraft(null); reload(); }
   };
 
@@ -63,16 +62,16 @@ export default function GalleryPage() {
         <label htmlFor="gUpload" className={`${btn.primary} cursor-pointer ${progress || !upCat ? 'pointer-events-none opacity-60' : ''}`}><Icon name="upload" className="h-4 w-4" />{progress || `Upload to ${upCat}`}</label>
       </PageHeader>
 
-      <div role="group" aria-label="Filter photos" className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      {!catRows ? <ChipsSkeleton n={5} /> : <div role="group" aria-label="Filter photos" className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {['All', ...cats].map((c) => (
           <button key={c} type="button" aria-pressed={filter === c} onClick={() => setFilter(c)}
             className={`flex min-h-10 flex-none items-center gap-2 rounded-full px-4 text-sm font-semibold ring-1 transition ${filter === c ? 'bg-evergreen text-white ring-evergreen' : 'bg-white text-ink/75 ring-black/10 hover:text-ink'}`}>
             {c}<span className={`rounded-full px-1.5 text-xs ${filter === c ? 'bg-white/20' : 'bg-black/5'}`}>{(rows ?? []).filter((p) => c === 'All' || p.cat === c).length}</span>
           </button>
         ))}
-      </div>
+      </div>}
 
-      {!rows || !catRows ? <Skeleton /> : !list.length ? (
+      {!rows || !catRows ? <GridSkeleton /> : !list.length ? (
         <Empty icon="image" title="No photos here yet" text="Choose a category above, then upload one or more photos." />
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -101,10 +100,10 @@ export default function GalleryPage() {
         </ul>
       )}
 
-      <Drawer open={!!draft} onClose={() => setDraft(null)} title="Edit photo"
+      <Drawer open={!!draft} value={draft} onClose={() => setDraft(null)} title="Edit photo"
         footer={<>
           {draft && <button type="button" className={`${btn.secondary} mr-auto !text-red-700`} onClick={() => remove(draft)}><Icon name="trash" className="h-4 w-4" />Delete</button>}
-          <button type="button" className={btn.secondary} onClick={() => setDraft(null)}>Cancel</button>
+          <button type="button" className={btn.secondary} data-close>Cancel</button>
           <button type="submit" form="photoForm" className={btn.primary}>Save</button>
         </>}>
         {draft && (
@@ -124,7 +123,6 @@ export default function GalleryPage() {
         )}
       </Drawer>
       <CategoryManager table="gallery_categories" noun="filter buttons on the website gallery" open={managing} onClose={() => setManaging(false)} cats={catRows ?? []} counts={counts} onChange={() => { reloadCats(); reload(); }} />
-      {confirm.ui}
     </>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { HoursRow } from '@/lib/supabase';
 import { fmtTime } from '@/lib/hours';
-import { Icon, PageHeader, Skeleton, Toggle, btn, input, useAdmin, useRows } from '../ui';
+import { Icon, PageHeader, HoursSkeleton, Toggle, btn, input, useAdmin, useRows } from '../ui';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const ORDER = [1, 2, 3, 4, 5, 6, 0]; // show Monday first
@@ -16,7 +16,7 @@ export default function HoursPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- editable copy of the loaded rows
   useEffect(() => { if (rows) setWeek(DAYS.map((_, dow) => rows.find((r) => r.dow === dow) ?? { dow, open: null, close: null })); }, [rows]);
 
-  if (!week) return <><PageHeader title="Opening Hours" desc="Loading…" /><Skeleton rows={7} /></>;
+  if (!week) return <><PageHeader title="Opening Hours" desc="Used for the “Open now” badge, the hours table and Google." /><HoursSkeleton /></>;
 
   const dirty = JSON.stringify(week) !== JSON.stringify(DAYS.map((_, dow) => rows!.find((r) => r.dow === dow) ?? { dow, open: null, close: null }));
   const set = (dow: number, patch: Partial<HoursRow>) => setWeek(week.map((d) => (d.dow === dow ? { ...d, ...patch } : d)));

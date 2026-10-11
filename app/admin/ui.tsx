@@ -12,6 +12,8 @@ export type Admin = {
   toast: (msg: string, tone?: 'ok' | 'err') => void;
   /** Run a write, then refresh the public site. Returns false (and toasts) on error. */
   save: (write: () => PromiseLike<{ error: { message: string } | null }>, done?: string) => Promise<boolean>;
+  /** Custom confirmation dialog; resolves true when the user confirms. */
+  confirm: (o: ConfirmOpts) => Promise<boolean>;
 };
 export const AdminCtx = createContext<Admin | null>(null);
 export const useAdmin = () => useContext(AdminCtx)!;
@@ -143,6 +145,7 @@ const tones = {
   ended: 'bg-stone-100 text-stone-600 ring-stone-500/20',
   paused: 'bg-amber-50 text-amber-800 ring-amber-600/25',
   hidden: 'bg-stone-100 text-stone-600 ring-stone-500/20',
+  soldout: 'bg-rose-50 text-rose-800 ring-rose-600/20',
 };
 export function Badge({ tone, children }: { tone: keyof typeof tones; children: React.ReactNode }) {
   return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${tones[tone]}`}>
@@ -160,57 +163,129 @@ export function Empty({ icon, title, text, action }: { icon: IconName; title: st
   );
 }
 
-export const Skeleton = ({ rows = 4 }: { rows?: number }) => (
-  <div className="space-y-3" aria-busy="true" aria-label="Loading">
-    {[...Array(rows)].map((_, i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-black/[.05]" />)}
-  </div>
+/* ---------- Skeleton loaders: same shapes as the real content, so nothing jumps ---------- */
+export const Bone = ({ className = '' }: { className?: string }) => <span className={`block animate-pulse rounded-md bg-black/[.07] ${className}`} />;
+const Loading = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div className={className} aria-busy="true"><span className="sr-only" role="status">Loading…</span><div aria-hidden="true" className="contents">{children}</div></div>
+);
+const times = (n: number) => [...Array(n)].map((_, i) => i);
+
+/** Filter / category chips. */
+export const ChipsSkeleton = ({ n = 4, className = 'mb-5' }: { n?: number; className?: string }) => (
+  <Loading className={`flex gap-2 overflow-hidden ${className}`}>{times(n).map((i) => <Bone key={i} className="h-10 w-24 flex-none rounded-full" />)}</Loading>
+);
+/** Rows with a thumbnail, two lines of text and action buttons (deals, menu). */
+export const ListSkeleton = ({ rows = 5 }: { rows?: number }) => (
+  <Loading className="divide-y divide-black/5 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+    {times(rows).map((i) => (
+      <div key={i} className="flex items-center gap-4 p-4">
+        <Bone className="h-14 w-16 flex-none rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-2"><Bone className="h-4 w-2/5" /><Bone className="h-3 w-3/5" /></div>
+        <Bone className="hidden h-6 w-11 rounded-full sm:block" />
+        <div className="hidden gap-1 sm:flex">{times(3).map((k) => <Bone key={k} className="h-9 w-9 rounded-lg" />)}</div>
+      </div>
+    ))}
+  </Loading>
+);
+/** Photo tiles (gallery). */
+export const GridSkeleton = ({ n = 8 }: { n?: number }) => (
+  <Loading className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    {times(n).map((i) => (
+      <div key={i} className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+        <Bone className="aspect-square w-full rounded-none" />
+        <div className="flex justify-between p-2"><Bone className="h-8 w-20" /><Bone className="h-8 w-8" /></div>
+      </div>
+    ))}
+  </Loading>
+);
+/** Day rows with two time fields (opening hours). */
+export const HoursSkeleton = () => (
+  <Loading className="divide-y divide-black/5 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+    {times(7).map((i) => (
+      <div key={i} className="flex flex-wrap items-center gap-4 p-4">
+        <Bone className="h-4 w-24" /><Bone className="h-6 w-20 rounded-full" />
+        <Bone className="h-11 w-36" /><Bone className="h-11 w-36" />
+      </div>
+    ))}
+  </Loading>
+);
+/** Whole dashboard frame, shown while the sign-in session is restored. */
+export const ShellSkeleton = () => (
+  <Loading className="admin-app min-h-dvh lg:pl-64">
+    <div className="fixed inset-y-0 left-0 hidden w-64 flex-col gap-2 bg-evergreen p-5 lg:flex">
+      <div className="mb-6 flex items-center gap-3"><span className="h-11 w-11 animate-pulse rounded-full bg-white/10" /><span className="h-4 w-28 animate-pulse rounded bg-white/10" /></div>
+      {times(5).map((i) => <span key={i} className="h-11 animate-pulse rounded-lg bg-white/[.06]" />)}
+    </div>
+    <div className="flex h-[52px] items-center justify-between bg-evergreen px-3 lg:hidden"><span className="h-9 w-40 animate-pulse rounded bg-white/10" /><span className="h-9 w-9 animate-pulse rounded-full bg-white/10" /></div>
+    <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-10 lg:pt-10">
+      <Bone className="h-7 w-56" /><Bone className="mt-3 h-4 w-80 max-w-full" />
+      <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">{times(4).map((i) => <Bone key={i} className="h-32 rounded-xl" />)}</div>
+      <Bone className="mt-8 h-64 rounded-xl" />
+    </div>
+  </Loading>
 );
 
-/** Native <dialog> as a right-side panel (full screen on phones). */
-export function Drawer({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; footer: React.ReactNode }) {
+/** Native <dialog> as a right-side panel (full screen on phones).
+ *  Pass `value` (the form draft) to get a "Discard changes?" check when closing an edited form.
+ *  Footer buttons marked `data-close` close the panel through the same check. */
+export function Drawer({ open, onClose, title, children, footer, value }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; footer: React.ReactNode; value?: unknown }) {
+  const { confirm } = useAdmin();
   const ref = useRef<HTMLDialogElement>(null);
+  const snap = useRef('');
   useEffect(() => {
     const d = ref.current!;
-    if (open && !d.open) { d.showModal(); setScrollLock('drawer'); }
+    if (open && !d.open) { d.showModal(); setScrollLock('drawer'); snap.current = JSON.stringify(value); }
     if (!open && d.open) d.close();
-  }, [open]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps -- snapshot the draft only when the panel opens
+  const requestClose = async () => {
+    const dirty = value !== undefined && JSON.stringify(value) !== snap.current;
+    if (dirty && !(await confirm({ title: 'Discard your changes?', text: 'You have edits that haven’t been saved. If you close now, they’ll be lost.', action: 'Discard changes', cancel: 'Keep editing' }))) return;
+    ref.current?.close();
+  };
   return (
-    <dialog ref={ref} data-lenis-prevent onClose={() => { setScrollLock(); onClose(); }} aria-labelledby="drawerTitle"
+    <dialog ref={ref} data-lenis-prevent aria-labelledby="drawerTitle"
+      onCancel={(e) => { e.preventDefault(); requestClose(); }} onClose={() => { setScrollLock(); onClose(); }}
       className="admin-drawer m-0 ml-auto h-dvh max-h-dvh w-full max-w-full bg-stone-50 p-0 text-ink shadow-2xl sm:w-[34rem]">
       {open && (
         <div className="flex h-full flex-col">
           <header className="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-3">
             <h2 id="drawerTitle" className="text-lg font-semibold">{title}</h2>
-            <button type="button" className={btn.icon} onClick={() => ref.current?.close()} aria-label="Close"><Icon name="x" /></button>
+            <button type="button" className={btn.icon} onClick={requestClose} aria-label="Close"><Icon name="x" /></button>
           </header>
           <div className="flex-1 overflow-y-auto px-5 py-6">{children}</div>
-          <footer className="flex justify-end gap-2 border-t border-black/10 bg-white px-5 py-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">{footer}</footer>
+          <footer onClick={(e) => { if ((e.target as HTMLElement).closest('[data-close]')) requestClose(); }}
+            className="flex justify-end gap-2 border-t border-black/10 bg-white px-5 py-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">{footer}</footer>
         </div>
       )}
     </dialog>
   );
 }
 
-/** "Are you sure?" — resolves true when confirmed. */
+/* ---------- Confirmation dialog (one per app, reached through useAdmin().confirm) ---------- */
+export type ConfirmOpts = { title: string; text: string; action: string; tone?: 'danger' | 'neutral'; icon?: IconName; cancel?: string };
+
 export function useConfirm() {
-  const [state, setState] = useState<{ title: string; text: string; resolve: (v: boolean) => void } | null>(null);
+  const [state, setState] = useState<(ConfirmOpts & { resolve: (v: boolean) => void }) | null>(null);
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { if (state && !ref.current!.open) ref.current!.showModal(); }, [state]);
-  const ask = (title: string, text: string) => new Promise<boolean>((resolve) => setState({ title, text, resolve }));
+  const ask = useCallback((o: ConfirmOpts) => new Promise<boolean>((resolve) => setState({ ...o, resolve })), []);
   const done = (v: boolean) => { state?.resolve(v); setState(null); ref.current?.close(); };
+  const danger = state?.tone !== 'neutral';
   const ui = (
-    <dialog ref={ref} onClose={() => state && done(false)} aria-labelledby="cfTitle"
+    <dialog ref={ref} onClose={() => state && done(false)} aria-labelledby="cfTitle" aria-describedby="cfText"
       className="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-2xl bg-white p-6 text-ink shadow-2xl backdrop:bg-black/40">
       <div className="flex gap-4">
-        <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-red-50 text-red-700"><Icon name="alert" /></span>
+        <span className={`grid h-10 w-10 flex-none place-items-center rounded-full ${danger ? 'bg-red-50 text-red-700' : 'bg-fern/30 text-evergreen'}`}>
+          <Icon name={state?.icon ?? (danger ? 'alert' : 'check')} />
+        </span>
         <div>
           <h2 id="cfTitle" className="font-semibold">{state?.title}</h2>
-          <p className="mt-1 text-sm text-ink/70">{state?.text}</p>
+          <p id="cfText" className="mt-1 text-sm text-ink/70">{state?.text}</p>
         </div>
       </div>
-      <div className="mt-6 flex justify-end gap-2">
-        <button type="button" className={btn.secondary} onClick={() => done(false)} autoFocus>Cancel</button>
-        <button type="button" className={btn.danger} onClick={() => done(true)}>Delete</button>
+      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button type="button" className={btn.secondary} onClick={() => done(false)} autoFocus>{state?.cancel ?? 'Cancel'}</button>
+        <button type="button" className={danger ? btn.danger : btn.primary} onClick={() => done(true)}>{state?.action}</button>
       </div>
     </dialog>
   );
@@ -275,6 +350,7 @@ export function CategoryManager({ table, open, onClose, cats, counts, noun, onCh
     if (await admin.save(() => admin.db.from(table).insert({ name: n, sort: Math.max(-1, ...cats.map((c) => c.sort)) + 1 }), `“${n}” added`)) { setFresh(''); onChange(); }
   };
   const remove = async (c: CategoryRow) => {
+    if (!(await admin.confirm({ title: `Delete “${c.name}”?`, text: 'The category will be removed from the website. You can add it again later.', action: 'Delete category' }))) return;
     if (await admin.save(() => admin.db.from(table).delete().eq('id', c.id), `“${c.name}” deleted`)) onChange();
   };
 

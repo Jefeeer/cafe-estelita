@@ -43,18 +43,20 @@ function DealCard({ d, i }: { d: Deal; i: number }) {
 function Card({ it, i }: { it: MenuItem; i: number }) {
   return (
     <article className="lift group panel-in overflow-hidden rounded-[1.75rem] bg-ivory shadow-soft ring-1 ring-evergreen/5" style={{ animationDelay: `${i * 60}ms` }}>
-      <div className="zoom relative aspect-[4/3] overflow-hidden">
+      <div className={`zoom relative aspect-[4/3] overflow-hidden ${it.soldOut ? 'grayscale-[.85]' : ''}`}>
         {it.img
-          ? <Image src={it.img} alt={it.alt} fill sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 92vw" className="object-cover" />
+          ? <Image src={it.img} alt={it.alt} fill sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 92vw" className={`object-cover ${it.soldOut ? 'opacity-70' : ''}`} />
           : <div className="absolute inset-0 grid place-items-center bg-blush-deep"><Image src="/brand/logo-mark.png" alt="" width={96} height={96} className="h-20 w-20 rounded-full opacity-70" /></div>}
-        {it.tags?.includes('Bestseller') && (
+        {it.soldOut ? (
+          <span className="absolute left-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-blush shadow-soft">Sold out</span>
+        ) : it.tags?.includes('Bestseller') && (
           <span className="absolute left-3 top-3 rounded-full bg-clay px-3 py-1 text-xs font-semibold text-white shadow-soft">Bestseller</span>
         )}
       </div>
       <div className="p-6">
         <div className="flex items-baseline justify-between gap-4">
           <h3 className="display text-xl text-evergreen">{it.name}</h3>
-          <p className="flex-none text-lg font-semibold text-clay">{peso(it.price)}</p>
+          <p className={`flex-none text-lg font-semibold ${it.soldOut ? 'text-ink/50' : 'text-clay'}`}>{it.soldOut && <span className="sr-only">Sold out, </span>}{peso(it.price)}</p>
         </div>
         <p className="mt-2 text-[.95rem] leading-relaxed text-ink/80">{it.desc}</p>
         {!!it.tags?.length && (
@@ -102,7 +104,8 @@ export default function MenuSection({ menu, deals }: { menu: Record<string, Menu
           </div>
           <div className="relative flex flex-col justify-center gap-5 overflow-hidden p-8 sm:p-12">
             <Image src="/brand/logo-mark.png" alt="" width={260} height={260} className="spin-slow pointer-events-none absolute -right-16 -top-16 h-56 w-56 opacity-10" />
-            <p className="caps w-max rounded-full bg-blush px-3 py-1.5 text-[.7rem] text-clay">House signature</p>
+            <p className="flex flex-wrap gap-2"><span className="caps w-max rounded-full bg-blush px-3 py-1.5 text-[.7rem] text-clay">House signature</span>
+              {sig.soldOut && <span className="w-max rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-blush">Sold out today</span>}</p>
             <h3 className="display text-4xl sm:text-5xl">{sig.name}</h3>
             <p className="text-lg leading-relaxed text-blush/90">{sig.desc}</p>
             <div className="flex flex-wrap items-center gap-3 pt-2">

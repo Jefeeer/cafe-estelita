@@ -57,7 +57,7 @@ export const HOURS: { timezone: string; week: Day[] } = {
    REPLACE WITH REAL MENU ITEMS AND PRICES FROM INSTAGRAM/FACEBOOK
    Each category becomes a tab. price = number in pesos.
    The item with  signature: true  is shown as the big featured card. */
-export type MenuItem = { name: string; price: number; desc: string; tags?: string[]; img: string; alt: string; signature?: boolean };
+export type MenuItem = { name: string; price: number; desc: string; tags?: string[]; img: string; alt: string; signature?: boolean; soldOut?: boolean };
 export const MENU: Record<string, MenuItem[]> = {
   Coffee: [
     { name: 'Spanish Latte', price: 160, desc: 'Espresso, steamed milk and a ribbon of condensed milk — our everyday favorite.', tags: ['Hot / Iced', 'Bestseller'], img: U('1572442388796-11668a67e53d', 800, 600), alt: 'Spanish latte with rosetta latte art in a white cup' },

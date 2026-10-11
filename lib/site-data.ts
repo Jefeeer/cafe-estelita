@@ -34,7 +34,7 @@ export async function getSiteData(): Promise<SiteData> {
   for (const c of menuCats.data as CategoryRow[]) grouped[c.name] = [];
   for (const m of menu.data as MenuRow[]) {
     (grouped[m.category] ??= []).push({
-      name: m.name, price: Number(m.price), desc: m.description, tags: m.tags, img: m.image_url, alt: m.image_alt || m.name, signature: m.signature,
+      name: m.name, price: Number(m.price), desc: m.description, tags: m.tags, img: m.image_url, alt: m.image_alt || m.name, signature: m.signature, soldOut: m.sold_out,
     });
   }
   const rows = hours.data as HoursRow[];

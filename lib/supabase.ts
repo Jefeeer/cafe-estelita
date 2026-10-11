@@ -19,7 +19,7 @@ export type Deal = {
 };
 export type MenuRow = {
   id: string; category: string; name: string; description: string; price: number; tags: string[];
-  image_url: string; image_alt: string; signature: boolean; available: boolean; sort: number;
+  image_url: string; image_alt: string; signature: boolean; available: boolean; sold_out: boolean; sort: number;
 };
 export type PhotoRow = { id: string; src: string; w: number; h: number; cat: string; alt: string; visible: boolean; sort: number };
 export type CategoryRow = { id: string; name: string; sort: number };

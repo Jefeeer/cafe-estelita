@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { dealState, manilaToday, type Deal, type DealState } from '@/lib/supabase';
-import { Badge, Drawer, Empty, Field, Icon, ImagePicker, PageHeader, Skeleton, Toggle, btn, fmtDate, input, move, peso, useAdmin, useConfirm, useRows } from '../ui';
+import { Badge, Drawer, Empty, Field, Icon, ImagePicker, PageHeader, ChipsSkeleton, ListSkeleton, Toggle, btn, fmtDate, input, move, peso, useAdmin, useRows } from '../ui';
 
 const STATES: { key: DealState | 'all'; label: string }[] = [
   { key: 'all', label: 'All' }, { key: 'live', label: 'Live' }, { key: 'scheduled', label: 'Scheduled' }, { key: 'paused', label: 'Paused' }, { key: 'ended', label: 'Ended' },
@@ -24,7 +24,6 @@ export default function DealsPage() {
   const [filter, setFilter] = useState<DealState | 'all'>('all');
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
-  const confirm = useConfirm();
 
   const today = manilaToday();
   const list = (rows ?? []).filter((d) => filter === 'all' || dealState(d, today) === filter);
@@ -52,7 +51,7 @@ export default function DealsPage() {
   };
 
   const remove = async (d: Deal) => {
-    if (!(await confirm.ask(`Delete “${d.title}”?`, 'It will be removed from the website right away. This can’t be undone — to hide it for now, switch it off instead.'))) return;
+    if (!(await admin.confirm({ title: `Delete “${d.title}”?`, text: 'It will be removed from the website right away. This can’t be undone — to hide it for now, switch it off instead.', action: 'Delete deal' }))) return;
     if (await admin.save(() => admin.db.from('deals').delete().eq('id', d.id), 'Deal deleted')) reload();
   };
   const setActive = async (d: Deal, active: boolean) => {
@@ -68,16 +67,16 @@ export default function DealsPage() {
         <button type="button" className={btn.primary} onClick={() => setDraft(blank())}><Icon name="plus" className="h-4 w-4" />New deal</button>
       </PageHeader>
 
-      <div role="group" aria-label="Filter deals" className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      {!rows ? <ChipsSkeleton n={5} /> : <div role="group" aria-label="Filter deals" className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {STATES.map((s) => (
           <button key={s.key} type="button" aria-pressed={filter === s.key} onClick={() => setFilter(s.key)}
             className={`flex min-h-10 flex-none items-center gap-2 rounded-full px-4 text-sm font-semibold ring-1 transition ${filter === s.key ? 'bg-evergreen text-white ring-evergreen' : 'bg-white text-ink/75 ring-black/10 hover:text-ink'}`}>
             {s.label}<span className={`rounded-full px-1.5 text-xs ${filter === s.key ? 'bg-white/20' : 'bg-black/5'}`}>{count(s.key)}</span>
           </button>
         ))}
-      </div>
+      </div>}
 
-      {!rows ? <Skeleton /> : !list.length ? (
+      {!rows ? <ListSkeleton rows={3} /> : !list.length ? (
         <Empty icon="tag" title={filter === 'all' ? 'No deals yet' : `No ${filter} deals`}
           text={filter === 'all' ? 'Create your first bundle — for example “Merienda for Two”.' : 'Deals show up here based on their dates and on/off switch.'}
           action={filter === 'all' && <button type="button" className={btn.primary} onClick={() => setDraft(blank())}><Icon name="plus" className="h-4 w-4" />New deal</button>} />
@@ -120,9 +119,9 @@ export default function DealsPage() {
         </ul>
       )}
 
-      <Drawer open={!!draft} onClose={() => setDraft(null)} title={draft?.id ? 'Edit deal' : 'New deal'}
+      <Drawer open={!!draft} value={draft} onClose={() => setDraft(null)} title={draft?.id ? 'Edit deal' : 'New deal'}
         footer={<>
-          <button type="button" className={btn.secondary} onClick={() => setDraft(null)}>Cancel</button>
+          <button type="button" className={btn.secondary} data-close>Cancel</button>
           <button type="submit" form="dealForm" className={btn.primary} disabled={saving}>{saving ? 'Saving…' : draft?.id ? 'Save changes' : 'Create deal'}</button>
         </>}>
         {draft && (
@@ -174,7 +173,6 @@ export default function DealsPage() {
           </form>
         )}
       </Drawer>
-      {confirm.ui}
     </>
   );
 }

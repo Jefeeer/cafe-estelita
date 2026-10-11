@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { browserClient, supabaseConfigured } from '@/lib/supabase';
 import { publishSite } from './actions';
-import { AdminCtx, Icon, btn, input, type Admin, type IconName } from './ui';
+import { AdminCtx, Icon, ShellSkeleton, btn, input, useConfirm, type Admin, type IconName } from './ui';
 
 const NAV: { href: string; label: string; short: string; icon: IconName }[] = [
   { href: '/admin', label: 'Overview', short: 'Home', icon: 'home' },
@@ -23,6 +23,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const db = useMemo(() => (supabaseConfigured ? browserClient() : null), []);
   const [user, setUser] = useState<User | null | undefined>(db ? undefined : null); // undefined = still checking
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const confirm = useConfirm();
   const path = usePathname();
 
   // Restore the session, and require an `admins` row (RLS returns only your own).
@@ -47,7 +48,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }, []);
 
   const admin = useMemo<Admin | null>(() => db && user ? {
-    db, user, toast,
+    db, user, toast, confirm: confirm.ask,
     save: async (write, done = 'Saved — the website is updated') => {
       const { error } = await write();
       if (error) { toast(`Couldn't save: ${error.message}`, 'err'); return false; }
@@ -56,7 +57,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       toast(done);
       return true;
     },
-  } : null, [db, user, toast]);
+  } : null, [db, user, toast, confirm.ask]);
 
   const toastUi = (
     <div className="pointer-events-none fixed inset-x-3 bottom-20 z-[60] flex flex-col items-center gap-2 lg:bottom-6 lg:left-auto lg:right-6 lg:items-end" role="status" aria-live="polite">
@@ -68,11 +69,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     </div>
   );
 
-  if (user === undefined) return <div className="admin-app grid min-h-dvh place-items-center text-sm text-ink/60" aria-busy="true">Loading…</div>;
+  if (user === undefined) return <ShellSkeleton />;
   if (!admin) return <div className="admin-app"><Login onDone={check} />{toastUi}</div>;
 
   const isActive = (href: string) => (href === '/admin' ? path === '/admin' : path.startsWith(href));
-  const signOut = () => db!.auth.signOut();
+  const signOut = async () => {
+    if (await confirm.ask({ title: 'Sign out?', text: 'You’ll need your email and password to sign back in. Everything you saved is already on the website.', action: 'Sign out', tone: 'neutral', icon: 'out' })) db!.auth.signOut();
+  };
 
   return (
     <AdminCtx value={admin}>
@@ -129,6 +132,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </ul>
         </nav>
         {toastUi}
+        {confirm.ui}
       </div>
     </AdminCtx>
   );
@@ -154,7 +158,7 @@ function AccountMenu({ email, onSignOut }: { email: string; onSignOut: () => voi
       <div className="absolute right-0 top-12 w-64 rounded-xl bg-white p-2 text-ink shadow-xl ring-1 ring-black/10">
         <p className="truncate px-3 py-2 text-sm text-ink/60">{email}</p>
         <a href="/" target="_blank" rel="noopener" className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium hover:bg-stone-100"><Icon name="ext" className="h-4 w-4" />View website</a>
-        <button type="button" onClick={onSignOut} className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-red-700 hover:bg-red-50"><Icon name="out" className="h-4 w-4" />Sign out</button>
+        <button type="button" onClick={() => { ref.current!.open = false; onSignOut(); }} className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-red-700 hover:bg-red-50"><Icon name="out" className="h-4 w-4" />Sign out</button>
       </div>
     </details>
   );

@@ -151,3 +151,6 @@ drop policy if exists "public read gallery categories" on public.gallery_categor
 create policy "public read gallery categories" on public.gallery_categories for select to anon, authenticated using (true);
 drop policy if exists "admins write gallery categories" on public.gallery_categories;
 create policy "admins write gallery categories" on public.gallery_categories for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- "Sold out" keeps an item on the website with a tag; available = false hides it entirely.
+alter table public.menu_items add column if not exists sold_out boolean not null default false;
