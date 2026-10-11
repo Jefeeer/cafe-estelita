@@ -128,3 +128,111 @@ export const ABOUT_PHOTOS = {
   side: { src: U('1534040385115-33dcb3acba5b', 800, 940), alt: 'Sunlit window table with a cup of coffee, notebook and potted plants' },
   polaroid: { src: U('1509042239860-f550ce710b93', 600, 600), alt: 'Two lattes with leaf latte art beside a sprig of greenery' },
 };
+
+/* =====================================================================
+   EDITABLE PAGE CONTENT — edited in /admin → Website content.
+   These are the defaults; any field left blank in the admin falls back here.
+   In titles, wrap words in *asterisks* to show them in the accent color.
+   ===================================================================== */
+export type Pic = { src: string; alt: string };
+export type SiteContent = {
+  hero: { tagline: string; title: string; subtitle: string; image: Pic; ctaMenu: string; ctaVisit: string };
+  about: { eyebrow: string; title: string; paragraphs: string[]; facts: { k: string; v: string }[]; main: Pic; side: Pic; polaroid: Pic; caption: string };
+  experience: { eyebrow: string; title: string; items: { title: string; text: string }[] };
+  menu: { eyebrow: string; title: string; intro: string; note: string };
+  gallery: { eyebrow: string; title: string };
+  reviews: { eyebrow: string; title: string; items: { quote: string; source: string }[] };
+  visit: { eyebrow: string; title: string; tip: string };
+  contact: { phone: string; addressLine1: string; addressLine2: string; shortLocation: string; plusCode: string; mapQuery: string; priceRange: string; services: string[] };
+  footer: { blurb: string; facebook: string; instagram: string };
+  seo: { title: string; description: string };
+};
+
+export const DEFAULT_CONTENT: SiteContent = {
+  hero: {
+    tagline: SITE.tagline,
+    title: 'Your *hidden garden* in the heart of Dasmariñas.',
+    subtitle: 'Coffee, comfort food, and slow afternoons among the greens.',
+    image: { src: SITE.heroImage, alt: 'Lush tropical leaves and hanging greenery filtering soft afternoon light, like the garden hidden behind Casa Estelita’s walls' },
+    ctaMenu: 'View Menu',
+    ctaVisit: 'Visit Us',
+  },
+  about: {
+    eyebrow: 'Our story',
+    title: 'Behind the gray wall, *a garden* was waiting.',
+    paragraphs: [
+      'From the street, you could walk right past us — a plain gray facade on busy Summerwind Drive, with only a round hanging sign to give us away. That’s exactly how we like it.',
+      'Step through the door and the traffic fades into birdsong and soft music. Leaves spill over the walls, light filters through the greens, and there’s always a quiet corner with your name on it — indoors where it’s cool, or out in the garden where the afternoon slows right down.',
+      'Our tree has deep roots and open branches, and that’s the whole idea: good coffee, honest comfort food, and staff who greet you like family. Relax, chill, unwind.',
+    ],
+    facts: [{ k: 'Seating', v: 'Garden & indoor' }, { k: 'Per person', v: SITE.priceRange }], // a third fact, "Doors open", comes from the hours
+    main: ABOUT_PHOTOS.main,
+    side: ABOUT_PHOTOS.side,
+    polaroid: ABOUT_PHOTOS.polaroid,
+    caption: 'afternoon, 3:15 pm',
+  },
+  experience: {
+    eyebrow: 'The experience',
+    title: 'A little escape from the city, *any afternoon*.',
+    items: [
+      { title: 'Garden & Indoor Seating', text: 'Breezy tables beneath the trees, or a cool indoor nook — pick your corner and stay a while.' },
+      { title: 'Work-Friendly Space', text: 'Roomy tables and a gentle hush for deep work, study sessions, or finally finishing that book.' },
+      { title: 'Relaxing Music & Ambience', text: 'Calm playlists, rustling leaves and soft light — the kind of quiet that makes time slow down.' },
+      { title: 'Homey Service', text: 'Warm, welcoming staff who remember your order and make you feel right at home.' },
+    ],
+  },
+  menu: {
+    eyebrow: 'From the counter',
+    title: 'Made slowly, *served warmly*.',
+    intro: 'A taste of what’s on the counter. Ask our staff about today’s pastries and seasonal drinks.',
+    note: 'Prices in Philippine pesos and subject to change.',
+  },
+  gallery: { eyebrow: 'The gallery', title: 'Moments *among the greens*.' },
+  reviews: { eyebrow: 'Kind words', title: 'What our guests *say*', items: TESTIMONIALS },
+  visit: {
+    eyebrow: 'Finding us',
+    title: 'Find the *gray wall*. Open the door.',
+    tip: 'Look for our hanging logo on the gray wall — the garden is waiting inside.',
+  },
+  contact: {
+    phone: SITE.phone,
+    addressLine1: SITE.address.line1,
+    addressLine2: SITE.address.line2,
+    shortLocation: 'Summerwind Dr, Burol Main',
+    plusCode: SITE.plusCode,
+    mapQuery: 'Casa Estelita Garden Cafe 8XG2+CP Dasmariñas, Cavite',
+    priceRange: SITE.priceRange,
+    services: SITE.services,
+  },
+  footer: {
+    blurb: 'A hidden garden cafe in Dasmariñas. Coffee, comfort food & slow afternoons.',
+    facebook: SITE.facebook,
+    instagram: SITE.instagram,
+  },
+  seo: {
+    title: 'Casa Estelita Garden Cafe | Garden Coffee Shop in Dasmariñas, Cavite',
+    description: 'Casa Estelita is a hidden garden cafe behind a quiet gray wall in Dasmariñas, Cavite. Specialty coffee, pastries, signature lasagna, indoor and garden seating — perfect for slow afternoons, solo dates and remote work.',
+  },
+};
+
+/** Saved admin content over the defaults: blank text, empty lists and missing keys fall back. */
+export function mergeContent<T>(def: T, saved: unknown): T {
+  if (Array.isArray(def)) {
+    if (!Array.isArray(saved) || !saved.length) return def;
+    // lists of objects (reviews, facts…) merge item-wise against a default item as the template
+    return (typeof def[0] === 'object' && def[0] !== null
+      ? saved.map((s, i) => mergeContent(def[i] ?? def[0], s))
+      : saved.filter((s) => typeof s === 'string' && s.trim()).map((s: string) => s.trim())) as T;
+  }
+  if (typeof def === 'object' && def !== null) {
+    const s = (typeof saved === 'object' && saved !== null ? saved : {}) as Record<string, unknown>;
+    return Object.fromEntries(Object.entries(def).map(([k, v]) => [k, mergeContent(v, s[k])])) as T;
+  }
+  return (typeof saved === 'string' && saved.trim() ? saved.trim() : def) as T;
+}
+
+/** "0906 508 1467" → tel:+639065081467 / +63-906-508-1467 */
+export const phoneHref = (p: string) => 'tel:' + p.replace(/[^\d+]/g, '').replace(/^0/, '+63');
+export const phoneIntl = (p: string) => { const d = p.replace(/\D/g, '').replace(/^0/, ''); return d.length === 10 ? `+63-${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : p; };
+export const mapEmbed = (q: string) => `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
+export const directions = (q: string) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;

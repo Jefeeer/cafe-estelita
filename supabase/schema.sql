@@ -154,3 +154,18 @@ create policy "admins write gallery categories" on public.gallery_categories for
 
 -- "Sold out" keeps an item on the website with a tag; available = false hides it entirely.
 alter table public.menu_items add column if not exists sold_out boolean not null default false;
+
+-- Page content (hero, about, contact, …) as one JSON document; blank fields fall back to lib/content.ts.
+create table if not exists public.site_content (
+  id int primary key default 1 check (id = 1),
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+insert into public.site_content (id) values (1) on conflict do nothing;
+alter table public.site_content enable row level security;
+drop policy if exists "public read site content" on public.site_content;
+create policy "public read site content" on public.site_content for select to anon, authenticated using (true);
+drop policy if exists "admins write site content" on public.site_content;
+create policy "admins write site content" on public.site_content for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop trigger if exists site_content_touch on public.site_content;
+create trigger site_content_touch before update on public.site_content for each row execute function public.touch_updated_at();

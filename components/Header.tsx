@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { SITE } from '@/lib/content';
+
 import OpenStatus from './OpenStatus';
 import { setScrollLock } from './SmoothScroll';
 
@@ -19,7 +19,7 @@ export const PinIcon = ({ className = 'h-4 w-4' }) => (
   </svg>
 );
 
-export default function Header() {
+export default function Header({ tagline, directions, phone, phoneHref }: { tagline: string; directions: string; phone: string; phoneHref: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState('');
@@ -72,7 +72,7 @@ export default function Header() {
 
           <div className="flex flex-none items-center gap-3">
             <OpenStatus variant="short" className="hidden items-center gap-2 text-sm lg:flex" />
-            <a href={SITE.directions} target="_blank" rel="noopener"
+            <a href={directions} target="_blank" rel="noopener"
               className="hidden items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-evergreen sm:inline-flex"
               style={{ textShadow: 'none' }}>
               <PinIcon /> Get Directions<span className="sr-only"> (opens Google Maps)</span>
@@ -90,7 +90,7 @@ export default function Header() {
         <Image src="/brand/logo-mark.png" alt="" width={420} height={420}
           className="spin-slow pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 opacity-[.08]" />
         <nav aria-label="Mobile" className="relative flex min-h-full flex-col px-6 pb-10 pt-28" onClick={(e) => (e.target as HTMLElement).closest('a') && setOpen(false)}>
-          <p className="caps mb-6 text-xs text-moss">{SITE.tagline}</p>
+          <p className="caps mb-6 text-xs text-moss">{tagline}</p>
           <ul className="border-t border-blush/10">
             {LINKS.map((l, i) => (
               <li key={l.href}><a ref={i === 0 ? firstLinkRef : undefined} tabIndex={open ? 0 : -1} className="big display flex items-center justify-between border-b border-blush/10 py-4 text-[1.85rem] leading-none" href={l.href}>{l.label}<span className="text-base text-moss" aria-hidden="true">→</span></a></li>
@@ -98,10 +98,10 @@ export default function Header() {
           </ul>
           <div className="mt-auto space-y-4 pt-12">
             <OpenStatus className="flex items-center gap-2 text-sm" />
-            <a href={SITE.directions} target="_blank" rel="noopener" tabIndex={open ? 0 : -1} className="flex w-full items-center justify-center gap-2 rounded-full bg-blush px-6 py-4 font-semibold text-evergreen">
+            <a href={directions} target="_blank" rel="noopener" tabIndex={open ? 0 : -1} className="flex w-full items-center justify-center gap-2 rounded-full bg-blush px-6 py-4 font-semibold text-evergreen">
               <PinIcon /> Get Directions<span className="sr-only"> (opens Google Maps)</span>
             </a>
-            <a href={SITE.phoneHref} tabIndex={open ? 0 : -1} className="flex w-full items-center justify-center rounded-full border border-blush/40 px-6 py-4 font-semibold">Call {SITE.phone}</a>
+            <a href={phoneHref} tabIndex={open ? 0 : -1} className="flex w-full items-center justify-center rounded-full border border-blush/40 px-6 py-4 font-semibold">Call {phone}</a>
           </div>
         </nav>
       </div>

@@ -192,7 +192,7 @@ export default function MenuPage() {
           </form>
         )}
       </Drawer>
-      <CategoryManager table="menu_categories" noun="tabs on the menu" open={managing} onClose={() => setManaging(false)} cats={catRows ?? []} counts={counts} onChange={() => { reloadCats(); reload(); }} />
+      <CategoryManager table="menu_categories" noun="tabs on the menu" open={managing} onClose={() => setManaging(false)} cats={catRows ?? []} counts={counts} onChange={() => Promise.all([reloadCats(), reload()])} />
     </>
   );
 }

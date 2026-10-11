@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { SITE, ABOUT_PHOTOS, type Day } from '@/lib/content';
+import type { Metadata } from 'next';
+import { SITE, phoneHref, phoneIntl, mapEmbed, directions, type Day, type SiteContent } from '@/lib/content';
 import { getSiteData } from '@/lib/site-data';
 import { fmtTime } from '@/lib/hours';
 import Header, { PinIcon } from '@/components/Header';
@@ -10,37 +11,40 @@ import Gallery from '@/components/Gallery';
 import Testimonials from '@/components/Testimonials';
 
 /* Structured data for Google — opening hours come straight from the admin hours, so they never drift. */
-const jsonLd = (week: Day[]) => ({
+const jsonLd = (week: Day[], c: SiteContent) => ({
   '@context': 'https://schema.org',
   '@type': 'CafeOrCoffeeShop',
   name: SITE.name,
   url: SITE.url,
   logo: `${SITE.url}/brand/logo-full.jpg`,
-  image: SITE.heroImage,
-  slogan: SITE.tagline,
+  image: c.hero.image.src,
+  slogan: c.hero.tagline,
   description: 'A hidden garden cafe in Dasmariñas, Cavite with indoor and garden seating, specialty coffee, pastries and comfort food.',
-  telephone: SITE.phoneIntl,
-  priceRange: SITE.priceRange,
+  telephone: phoneIntl(c.contact.phone),
+  priceRange: c.contact.priceRange,
   servesCuisine: ['Coffee', 'Pastries', 'Pasta', 'Filipino'],
   address: {
     '@type': 'PostalAddress',
-    streetAddress: SITE.address.street,
-    addressLocality: SITE.address.city,
-    addressRegion: SITE.address.region,
-    postalCode: SITE.address.postal,
+    streetAddress: c.contact.addressLine1,
+    addressLocality: c.contact.addressLine2,
     addressCountry: 'PH',
   },
-  hasMap: SITE.directions,
+  hasMap: directions(c.contact.mapQuery),
   openingHoursSpecification: week
     .filter((d) => d.open && d.close)
     .map((d) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: d.day, opens: d.open, closes: d.close })),
-  sameAs: [SITE.instagram, SITE.facebook],
+  sameAs: [c.footer.instagram, c.footer.facebook],
 });
 
 const PhoneIcon = ({ className = 'h-5 w-5' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" />
   </svg>
+);
+
+/** Words wrapped in *asterisks* (set in the admin) get the accent color. */
+const Accent = ({ text, className }: { text: string; className: string }) => (
+  <>{text.split(/\*([^*]+)\*/).map((part, i) => (i % 2 ? <span key={i} className={className}>{part}</span> : part))}</>
 );
 
 const Eyebrow = ({ n, children, dark = false }: { n: string; children: React.ReactNode; dark?: boolean }) => (
@@ -51,14 +55,14 @@ const Eyebrow = ({ n, children, dark = false }: { n: string; children: React.Rea
   </p>
 );
 
-const EXPERIENCE = [
-  { title: 'Garden & Indoor Seating', text: 'Breezy tables beneath the trees, or a cool indoor nook — pick your corner and stay a while.', tone: 'bg-evergreen text-blush',
+const EXPERIENCE_STYLE = [
+  { tone: 'bg-evergreen text-blush',
     icon: <><path d="M16 29V17" /><path d="M16 17c-2-3-7-3-9 0M16 21c2-3 7-3 9 0" /><circle cx="16" cy="10" r="7" /><path d="M10 29h12" /></> },
-  { title: 'Work-Friendly Space', text: 'Roomy tables and a gentle hush for deep work, study sessions, or finally finishing that book.', tone: 'bg-fern text-evergreen-deep',
+  { tone: 'bg-fern text-evergreen-deep',
     icon: <><rect x="6" y="7" width="20" height="14" rx="2" /><path d="M3 25h26" /><path d="M13 14l2 2 4-4" /></> },
-  { title: 'Relaxing Music & Ambience', text: 'Calm playlists, rustling leaves and soft light — the kind of quiet that makes time slow down.', tone: 'bg-clay text-white',
+  { tone: 'bg-clay text-white',
     icon: <><path d="M12 24V7l14-3v17" /><circle cx="8.5" cy="24" r="3.5" /><circle cx="22.5" cy="21" r="3.5" /></> },
-  { title: 'Homey Service', text: 'Warm, welcoming staff who remember your order and make you feel right at home.', tone: 'bg-ink text-blush',
+  { tone: 'bg-ink text-blush',
     icon: <><path d="M4 15 16 5l12 10" /><path d="M7 13v14h18V13" /><path d="M16 23s-4-2.4-4-5a2 2 0 0 1 4-.8 2 2 0 0 1 4 .8c0 2.6-4 5-4 5z" /></> },
 ];
 
@@ -67,21 +71,29 @@ const FIREFLIES = [
   [72, 58, 17, 3], [86, 40, 13, 1.9], [66, 80, 15, 4], [6, 28, 19, 2.6],
 ];
 
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = (await getSiteData()).content;
+  return { title: seo.title, description: seo.description, openGraph: { title: seo.title, description: seo.description }, twitter: { title: seo.title, description: seo.description } };
+}
+
 export default async function Home() {
-  const { menu, deals, gallery, galleryCats, week } = await getSiteData();
+  const { menu, deals, gallery, galleryCats, week, content: c } = await getSiteData();
   const opens = week.find((d) => d.open)?.open;
+  const tel = phoneHref(c.contact.phone);
+  const dir = directions(c.contact.mapQuery);
+  const [plusShort, ...plusRest] = c.contact.plusCode.split(' ');
   return (
     <HoursProvider week={week}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(week)).replace(/</g, '\\u003c') }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(week, c)).replace(/</g, '\\u003c') }} />
       <a href="#main" className="skip-link rounded-full bg-ink px-5 py-3 font-medium text-blush shadow-soft">Skip to content</a>
       <DoorIntro />
-      <Header />
+      <Header tagline={c.hero.tagline} directions={dir} phone={c.contact.phone} phoneHref={tel} />
 
       <main id="main" tabIndex={-1}>
         {/* ============================== HERO ============================== */}
         <section id="top" className="on-dark relative isolate flex hero-h items-end overflow-hidden bg-evergreen-night text-blush" aria-labelledby="heroTitle">
           <Parallax>
-            <Image src={SITE.heroImage} alt="Lush tropical leaves and hanging greenery filtering soft afternoon light, like the garden hidden behind Casa Estelita's walls"
+            <Image src={c.hero.image.src} alt={c.hero.image.alt}
               fill priority sizes="100vw" className="object-cover" />
           </Parallax>
           <div className="hero-overlay absolute inset-0" aria-hidden="true" />
@@ -93,18 +105,18 @@ export default async function Home() {
 
           <div className="relative mx-auto w-full max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pb-40 sm:pt-28 lg:px-8">
             <div className="hero-copy max-w-4xl">
-              <p className="caps mb-4 text-xs text-mint sm:text-sm">{SITE.tagline}</p>
+              <p className="caps mb-4 text-xs text-mint sm:text-sm">{c.hero.tagline}</p>
               <OpenStatus className="mb-6 inline-flex items-center gap-2 rounded-full border border-blush/30 bg-evergreen-night/50 px-4 py-1.5 text-sm backdrop-blur" />
               <h1 id="heroTitle" className="display text-[clamp(2.2rem,min(9.6vw,8.6svh),5rem)]">
-                Your <span className="text-mint">hidden garden</span> in the heart of Dasmariñas.
+                <Accent text={c.hero.title} className="text-mint" />
               </h1>
-              <p className="mt-5 max-w-xl text-lg text-blush/90 sm:text-xl">Coffee, comfort food, and slow afternoons among the greens.</p>
+              <p className="mt-5 max-w-xl text-lg text-blush/90 sm:text-xl">{c.hero.subtitle}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href="#menu" className="inline-flex items-center gap-2 rounded-full bg-blush px-7 py-3.5 font-semibold text-evergreen shadow-soft transition hover:-translate-y-0.5 hover:bg-white">
-                  View Menu
+                  {c.hero.ctaMenu}
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </a>
-                <a href="#visit" className="inline-flex items-center gap-2 rounded-full border border-blush/60 px-7 py-3.5 font-semibold text-blush transition hover:-translate-y-0.5 hover:bg-blush/10">Visit Us</a>
+                <a href="#visit" className="inline-flex items-center gap-2 rounded-full border border-blush/60 px-7 py-3.5 font-semibold text-blush transition hover:-translate-y-0.5 hover:bg-blush/10">{c.hero.ctaVisit}</a>
               </div>
             </div>
           </div>
@@ -115,9 +127,9 @@ export default async function Home() {
           <dl className="grid grid-cols-2 overflow-hidden rounded-[1.75rem] bg-ivory shadow-lift ring-1 ring-evergreen/5 lg:grid-cols-4">
             {[
               { k: 'Today', v: <TodayHours />, href: '#visit' },
-              { k: 'Find us', v: 'Summerwind Dr, Burol Main', href: SITE.directions, ext: true },
-              { k: 'Per person', v: SITE.priceRange, href: '#menu' },
-              { k: 'Call', v: SITE.phone, href: SITE.phoneHref },
+              { k: 'Find us', v: c.contact.shortLocation, href: dir, ext: true },
+              { k: 'Per person', v: c.contact.priceRange, href: '#menu' },
+              { k: 'Call', v: c.contact.phone, href: tel },
             ].map((c, i) => (
               <div key={c.k} className={`group relative p-5 sm:p-7 ${i % 2 ? 'border-l' : ''} ${i > 1 ? 'border-t lg:border-t-0' : ''} ${i === 2 ? 'lg:border-l' : ''} border-evergreen/10`}>
                 <dt className="caps text-[.68rem] text-clay">{c.k}</dt>
@@ -140,16 +152,13 @@ export default async function Home() {
 
           <div className="mx-auto grid max-w-7xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:px-8">
             <div className="reveal">
-              <Eyebrow n="01">Our story</Eyebrow>
-              <h2 id="aboutTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen">Behind the gray wall, <span className="text-clay">a garden</span> was waiting.</h2>
-              {/* EDIT: your story */}
+              <Eyebrow n="01">{c.about.eyebrow}</Eyebrow>
+              <h2 id="aboutTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen"><Accent text={c.about.title} className="text-clay" /></h2>
               <div className="mt-8 space-y-5 text-[1.075rem] leading-relaxed text-ink/85">
-                <p>From the street, you could walk right past us — a plain gray facade on busy Summerwind Drive, with only a round hanging sign to give us away. That&apos;s exactly how we like it.</p>
-                <p>Step through the door and the traffic fades into birdsong and soft music. Leaves spill over the walls, light filters through the greens, and there&apos;s always a quiet corner with your name on it — indoors where it&apos;s cool, or out in the garden where the afternoon slows right down.</p>
-                <p>Our tree has deep roots and open branches, and that&apos;s the whole idea: good coffee, honest comfort food, and staff who greet you like family. <span className="display text-evergreen">Relax, chill, unwind.</span></p>
+                {c.about.paragraphs.map((t, i) => <p key={i}>{t}</p>)}
               </div>
               <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-evergreen/15 pt-8">
-                {[['Seating', 'Garden & indoor'], ['Per person', SITE.priceRange], ['Doors open', opens ? fmtTime(opens) : '—']].map(([k, v]) => (
+                {[...c.about.facts.slice(0, 2).map((f) => [f.k, f.v]), ['Doors open', opens ? fmtTime(opens) : '—']].map(([k, v]) => (
                   <div key={k}><dt className="caps text-[.65rem] text-ink/75">{k}</dt><dd className="display mt-1.5 text-lg text-evergreen sm:text-xl">{v}</dd></div>
                 ))}
               </dl>
@@ -158,10 +167,10 @@ export default async function Home() {
             {/* Layered photo collage */}
             <div className="relative mx-auto aspect-[4/5] w-full max-w-[520px]">
               <div className="reveal absolute left-0 top-0 h-[78%] w-[66%] overflow-hidden rounded-arch shadow-lift" style={{ ['--rd' as string]: '.1s' }}>
-                <Image src={ABOUT_PHOTOS.main.src} alt={ABOUT_PHOTOS.main.alt} fill sizes="(min-width:1024px) 340px, 62vw" className="object-cover" />
+                <Image src={c.about.main.src} alt={c.about.main.alt} fill sizes="(min-width:1024px) 340px, 62vw" className="object-cover" />
               </div>
               <div className="reveal absolute bottom-0 right-0 h-[58%] w-[56%] overflow-hidden rounded-[1.75rem] border-[6px] border-blush shadow-lift" style={{ ['--rd' as string]: '.25s' }}>
-                <Image src={ABOUT_PHOTOS.side.src} alt={ABOUT_PHOTOS.side.alt} fill sizes="(min-width:1024px) 300px, 52vw" className="object-cover" />
+                <Image src={c.about.side.src} alt={c.about.side.alt} fill sizes="(min-width:1024px) 300px, 52vw" className="object-cover" />
               </div>
               {/* the hanging sign, as seen from the street */}
               <div className="reveal sway absolute right-[8%] top-0 flex flex-col items-center" style={{ ['--rd' as string]: '.4s', animationDuration: '6s' }} aria-hidden="true">
@@ -172,9 +181,9 @@ export default async function Home() {
               </div>
               <div className="reveal absolute -bottom-6 left-[4%] w-[44%] -rotate-[4deg] rounded-2xl bg-white p-2 pb-9 shadow-lift" style={{ ['--rd' as string]: '.55s' }}>
                 <div className="relative aspect-square overflow-hidden rounded-xl">
-                  <Image src={ABOUT_PHOTOS.polaroid.src} alt={ABOUT_PHOTOS.polaroid.alt} fill sizes="230px" className="object-cover" />
+                  <Image src={c.about.polaroid.src} alt={c.about.polaroid.alt} fill sizes="230px" className="object-cover" />
                 </div>
-                <p className="absolute inset-x-0 bottom-2.5 text-center text-sm italic text-ink/75">afternoon, 3:15 pm</p>
+                <p className="absolute inset-x-0 bottom-2.5 text-center text-sm italic text-ink/75">{c.about.caption}</p>
               </div>
             </div>
           </div>
@@ -184,11 +193,11 @@ export default async function Home() {
         <section id="experience" className="relative bg-blush-deep py-24 sm:py-32" aria-labelledby="expTitle">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="reveal max-w-2xl">
-              <Eyebrow n="02">The experience</Eyebrow>
-              <h2 id="expTitle" className="display text-[clamp(2.1rem,5vw,3.4rem)] text-evergreen">A little escape from the city, <span className="text-clay">any afternoon</span>.</h2>
+              <Eyebrow n="02">{c.experience.eyebrow}</Eyebrow>
+              <h2 id="expTitle" className="display text-[clamp(2.1rem,5vw,3.4rem)] text-evergreen"><Accent text={c.experience.title} className="text-clay" /></h2>
             </div>
             <ul className="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-              {EXPERIENCE.map((x, i) => (
+              {EXPERIENCE_STYLE.map((x, i) => ({ ...x, ...c.experience.items[i] })).filter((x) => x.title).map((x, i) => (
                 <li key={x.title} className="reveal border-t border-evergreen/25 pt-8" style={{ ['--rd' as string]: `${i * 0.1}s` }}>
                   <span className={`mb-6 grid h-16 w-16 place-items-center rounded-arch ${x.tone}`}>
                     <svg className={`h-8 w-8 ${i === 0 ? 'sway' : ''}`} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{x.icon}</svg>
@@ -206,13 +215,13 @@ export default async function Home() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="reveal flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div className="max-w-2xl">
-                <Eyebrow n="03">From the counter</Eyebrow>
-                <h2 id="menuTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen">Made slowly, <span className="text-clay">served warmly</span>.</h2>
+                <Eyebrow n="03">{c.menu.eyebrow}</Eyebrow>
+                <h2 id="menuTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen"><Accent text={c.menu.title} className="text-clay" /></h2>
               </div>
-              <p className="max-w-sm text-ink/80">A taste of what&apos;s on the counter. Ask our staff about today&apos;s pastries and seasonal drinks.</p>
+              <p className="max-w-sm text-ink/80">{c.menu.intro}</p>
             </div>
             <MenuSection menu={menu} deals={deals} />
-            <p className="mt-10 text-center text-sm text-ink/75">Prices in Philippine pesos and subject to change.</p>
+            <p className="mt-10 text-center text-sm text-ink/75">{c.menu.note}</p>
           </div>
         </section>
 
@@ -220,8 +229,8 @@ export default async function Home() {
         <section id="gallery" className="relative bg-blush-deep py-24 sm:py-32" aria-labelledby="galTitle">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="reveal mb-8 max-w-2xl">
-              <Eyebrow n="04">The gallery</Eyebrow>
-              <h2 id="galTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen">Moments <span className="text-clay">among the greens</span>.</h2>
+              <Eyebrow n="04">{c.gallery.eyebrow}</Eyebrow>
+              <h2 id="galTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)] text-evergreen"><Accent text={c.gallery.title} className="text-clay" /></h2>
             </div>
             <Gallery photos={gallery} cats={galleryCats} />
           </div>
@@ -231,9 +240,9 @@ export default async function Home() {
         <section id="reviews" className="speckled relative overflow-hidden py-24 sm:py-32" aria-labelledby="revTitle">
           <Image src="/brand/logo-mark.png" alt="" width={520} height={520} className="spin-slow pointer-events-none absolute -right-40 top-10 h-[26rem] w-[26rem] opacity-[.06]" />
           <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-            <div className="reveal flex justify-center"><Eyebrow n="05">Kind words</Eyebrow></div>
-            <h2 id="revTitle" className="reveal display text-[clamp(2rem,5vw,3.2rem)] text-evergreen">What our guests <span className="text-clay">say</span></h2>
-            <Testimonials />
+            <div className="reveal flex justify-center"><Eyebrow n="05">{c.reviews.eyebrow}</Eyebrow></div>
+            <h2 id="revTitle" className="reveal display text-[clamp(2rem,5vw,3.2rem)] text-evergreen"><Accent text={c.reviews.title} className="text-clay" /></h2>
+            <Testimonials items={c.reviews.items} />
           </div>
         </section>
 
@@ -246,21 +255,21 @@ export default async function Home() {
 
           <div className="relative mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-16 lg:px-8">
             <div className="reveal">
-              <Eyebrow n="06" dark>Finding us</Eyebrow>
-              <h2 id="visitTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)]">Find the <span className="text-mint">gray wall</span>. Open the door.</h2>
+              <Eyebrow n="06" dark>{c.visit.eyebrow}</Eyebrow>
+              <h2 id="visitTitle" className="display text-[clamp(2.2rem,5.5vw,3.8rem)]"><Accent text={c.visit.title} className="text-mint" /></h2>
               <OpenStatus className="mt-6 inline-flex items-center gap-2 rounded-full bg-evergreen-night/60 px-4 py-2 text-sm" />
 
               <dl className="mt-10 space-y-7">
                 <div className="flex gap-4">
                   <dt className="mt-1 flex-none text-moss"><span className="sr-only">Address</span><PinIcon className="h-5 w-5" /></dt>
                   <dd>
-                    <address className="text-lg not-italic leading-snug">{SITE.address.line1},<br />{SITE.address.line2}</address>
-                    <p className="mt-1 text-sm text-blush/80">Plus code: <span className="font-semibold text-blush">8XG2+CP</span> Dasmariñas, Cavite<CopyButton text={SITE.plusCode} /></p>
+                    <address className="text-lg not-italic leading-snug">{c.contact.addressLine1},<br />{c.contact.addressLine2}</address>
+                    <p className="mt-1 text-sm text-blush/80">Plus code: <span className="font-semibold text-blush">{plusShort}</span> {plusRest.join(' ')}<CopyButton text={c.contact.plusCode} /></p>
                   </dd>
                 </div>
                 <div className="flex gap-4">
                   <dt className="mt-1 flex-none text-moss"><span className="sr-only">Phone</span><PhoneIcon /></dt>
-                  <dd><a href={SITE.phoneHref} className="text-lg underline decoration-moss/60 underline-offset-4 hover:decoration-blush">{SITE.phone}</a></dd>
+                  <dd><a href={tel} className="text-lg underline decoration-moss/60 underline-offset-4 hover:decoration-blush">{c.contact.phone}</a></dd>
                 </div>
                 <div className="flex gap-4">
                   <dt className="mt-1 flex-none text-moss"><span className="sr-only">Opening hours</span>
@@ -272,9 +281,9 @@ export default async function Home() {
                   <dt className="mt-1 flex-none text-moss"><span className="sr-only">Price range and services</span>
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></svg></dt>
                   <dd>
-                    <p className="text-lg">{SITE.priceRange} per person</p>
+                    <p className="text-lg">{c.contact.priceRange} per person</p>
                     <ul className="mt-3 flex flex-wrap gap-2 text-sm">
-                      {SITE.services.map((s) => <li key={s} className="rounded-full border border-moss/60 px-3 py-1">{s}</li>)}
+                      {c.contact.services.map((s) => <li key={s} className="rounded-full border border-moss/60 px-3 py-1">{s}</li>)}
                     </ul>
                   </dd>
                 </div>
@@ -286,20 +295,20 @@ export default async function Home() {
                   <Image src="/brand/logo-mark.png" alt="" width={64} height={64} className="h-14 w-14 rounded-full ring-2 ring-ivory" />
                 </div>
                 <p className="leading-snug"><span className="caps text-[.68rem] text-moss">Tip</span><br />
-                  <span className="display text-lg">Look for our hanging logo on the gray wall — the garden is waiting inside.</span></p>
+                  <span className="display text-lg">{c.visit.tip}</span></p>
               </aside>
             </div>
 
             <div className="reveal flex flex-col gap-4" style={{ ['--rd' as string]: '.15s' }}>
               <div className="relative min-h-[380px] flex-1 overflow-hidden rounded-[2rem] border-4 border-blush/10 bg-evergreen-night shadow-lift lg:min-h-[560px]">
-                <iframe title="Map showing Casa Estelita Garden Cafe in Dasmariñas, Cavite" src={SITE.mapEmbed}
+                <iframe title="Map showing Casa Estelita Garden Cafe in Dasmariñas, Cavite" src={mapEmbed(c.contact.mapQuery)}
                   className="absolute inset-0 h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <a href={SITE.directions} target="_blank" rel="noopener" className="flex items-center justify-center gap-2 rounded-full bg-clay px-6 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#86402C]">
+                <a href={dir} target="_blank" rel="noopener" className="flex items-center justify-center gap-2 rounded-full bg-clay px-6 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#86402C]">
                   <PinIcon /> Get Directions<span className="sr-only"> (opens Google Maps)</span>
                 </a>
-                <a href={SITE.phoneHref} className="flex items-center justify-center gap-2 rounded-full border border-blush/40 px-6 py-4 font-semibold transition hover:bg-blush/10"><PhoneIcon className="h-4 w-4" /> Call us</a>
+                <a href={tel} className="flex items-center justify-center gap-2 rounded-full border border-blush/40 px-6 py-4 font-semibold transition hover:bg-blush/10"><PhoneIcon className="h-4 w-4" /> Call us</a>
               </div>
             </div>
           </div>
@@ -313,19 +322,19 @@ export default async function Home() {
             <a href="#top" className="flex items-center gap-4" aria-label="Casa Estelita — back to top">
               <Image src="/brand/logo-mark.png" alt="" width={72} height={72} className="h-16 w-16 rounded-full ring-2 ring-ivory/80" />
               <span><span className="caps block text-xl" style={{ letterSpacing: '.22em' }}>Casa Estelita</span>
-                <span className="caps mt-1 block text-[.65rem] text-moss">Garden Cafe · {SITE.tagline}</span></span>
+                <span className="caps mt-1 block text-[.65rem] text-moss">Garden Cafe · {c.hero.tagline}</span></span>
             </a>
-            <p className="mt-5 max-w-xs text-blush/80">A hidden garden cafe in Dasmariñas. Coffee, comfort food &amp; slow afternoons.</p>
+            <p className="mt-5 max-w-xs text-blush/80">{c.footer.blurb}</p>
           </div>
           <div className="flex flex-col gap-6 md:items-end">
             <ul className="flex gap-3" aria-label="Social media">
               <li>
-                <a href={SITE.instagram} target="_blank" rel="noopener" aria-label="Instagram (opens in new tab)" className="grid h-12 w-12 place-items-center rounded-full border border-blush/25 transition hover:-translate-y-0.5 hover:bg-blush hover:text-evergreen">
+                <a href={c.footer.instagram} target="_blank" rel="noopener" aria-label="Instagram (opens in new tab)" className="grid h-12 w-12 place-items-center rounded-full border border-blush/25 transition hover:-translate-y-0.5 hover:bg-blush hover:text-evergreen">
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>
                 </a>
               </li>
               <li>
-                <a href={SITE.facebook} target="_blank" rel="noopener" aria-label="Facebook (opens in new tab)" className="grid h-12 w-12 place-items-center rounded-full border border-blush/25 transition hover:-translate-y-0.5 hover:bg-blush hover:text-evergreen">
+                <a href={c.footer.facebook} target="_blank" rel="noopener" aria-label="Facebook (opens in new tab)" className="grid h-12 w-12 place-items-center rounded-full border border-blush/25 transition hover:-translate-y-0.5 hover:bg-blush hover:text-evergreen">
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21z" /></svg>
                 </a>
               </li>
@@ -344,11 +353,11 @@ export default async function Home() {
 
       {/* ============================== MOBILE FLOATING ACTIONS ============================== */}
       <ShowAfterHero className="fixed inset-x-3 bottom-3 z-30 flex gap-2 md:hidden">
-        <a href={SITE.facebook} target="_blank" rel="noopener" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-evergreen px-4 py-3.5 text-sm font-semibold text-blush shadow-lift ring-1 ring-blush/10">
+        <a href={c.footer.facebook} target="_blank" rel="noopener" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-evergreen px-4 py-3.5 text-sm font-semibold text-blush shadow-lift ring-1 ring-blush/10">
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.1 2 11.3c0 2.9 1.4 5.5 3.7 7.2V22l3.4-1.9c.9.3 1.9.4 2.9.4 5.5 0 10-4.1 10-9.2S17.5 2 12 2zm1 12.4-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7z" /></svg>
           Message us<span className="sr-only"> on Facebook (opens in new tab)</span>
         </a>
-        <a href={SITE.phoneHref} className="flex items-center justify-center gap-2 rounded-full bg-clay px-5 py-3.5 text-sm font-semibold text-white shadow-lift">
+        <a href={tel} className="flex items-center justify-center gap-2 rounded-full bg-clay px-5 py-3.5 text-sm font-semibold text-white shadow-lift">
           <PhoneIcon /> Call
         </a>
       </ShowAfterHero>

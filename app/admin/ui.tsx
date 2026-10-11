@@ -92,6 +92,7 @@ const paths = {
   eyeOff: <><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /></>,
   alert: <><path d="M12 3 2 20h20z" /><path d="M12 10v4M12 17h.01" /></>,
   check: <path d="M5 12l5 5 9-10" />,
+  layout: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11" /></>,
 };
 export type IconName = keyof typeof paths;
 export const Icon = ({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) => (
@@ -327,7 +328,7 @@ export function ImagePicker({ value, onChange, folder, onSize }: { value: string
  *  a category that still has items can't be deleted (also enforced by a foreign key). */
 export function CategoryManager({ table, open, onClose, cats, counts, noun, onChange }: {
   table: 'menu_categories' | 'gallery_categories'; open: boolean; onClose: () => void;
-  cats: CategoryRow[]; counts: Record<string, number>; noun: string; onChange: () => void;
+  cats: CategoryRow[]; counts: Record<string, number>; noun: string; onChange: () => Promise<unknown>;
 }) {
   const admin = useAdmin();
   const [names, setNames] = useState<Record<string, string>>({});
@@ -340,18 +341,18 @@ export function CategoryManager({ table, open, onClose, cats, counts, noun, onCh
     const n = nameOf(c).trim();
     if (!n || n === c.name) return clear(c.id);
     if (taken(n, c.id)) return admin.toast(`There’s already a category called “${n}”.`, 'err');
-    if (await admin.save(() => admin.db.from(table).update({ name: n }).eq('id', c.id), `Renamed to “${n}”`)) { clear(c.id); onChange(); }
+    if (await admin.save(() => admin.db.from(table).update({ name: n }).eq('id', c.id), `Renamed to “${n}”`)) { await onChange(); clear(c.id); }
   };
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     const n = fresh.trim();
     if (!n) return;
     if (taken(n)) return admin.toast(`There’s already a category called “${n}”.`, 'err');
-    if (await admin.save(() => admin.db.from(table).insert({ name: n, sort: Math.max(-1, ...cats.map((c) => c.sort)) + 1 }), `“${n}” added`)) { setFresh(''); onChange(); }
+    if (await admin.save(() => admin.db.from(table).insert({ name: n, sort: Math.max(-1, ...cats.map((c) => c.sort)) + 1 }), `“${n}” added`)) { setFresh(''); await onChange(); }
   };
   const remove = async (c: CategoryRow) => {
     if (!(await admin.confirm({ title: `Delete “${c.name}”?`, text: 'The category will be removed from the website. You can add it again later.', action: 'Delete category' }))) return;
-    if (await admin.save(() => admin.db.from(table).delete().eq('id', c.id), `“${c.name}” deleted`)) onChange();
+    if (await admin.save(() => admin.db.from(table).delete().eq('id', c.id), `“${c.name}” deleted`)) await onChange();
   };
 
   return (

@@ -98,6 +98,7 @@ export default function Overview() {
               ['/admin/menu', 'menu', 'Mark an item sold out', 'Or change prices and photos'],
               ['/admin/gallery', 'upload', 'Upload new photos', 'Straight from your phone'],
               ['/admin/hours', 'clock', 'Change opening hours', 'Holidays, new schedule'],
+              ['/admin/content', 'layout', 'Edit website text & photos', 'Hero, story, contact details, reviews'],
             ] as const).map(([href, icon, t, s]) => (
               <li key={t}>
                 <Link href={href} className="flex items-center gap-4 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5 transition hover:ring-evergreen/30">

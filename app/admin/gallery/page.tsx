@@ -122,7 +122,7 @@ export default function GalleryPage() {
           </form>
         )}
       </Drawer>
-      <CategoryManager table="gallery_categories" noun="filter buttons on the website gallery" open={managing} onClose={() => setManaging(false)} cats={catRows ?? []} counts={counts} onChange={() => { reloadCats(); reload(); }} />
+      <CategoryManager table="gallery_categories" noun="filter buttons on the website gallery" open={managing} onClose={() => setManaging(false)} cats={catRows ?? []} counts={counts} onChange={() => Promise.all([reloadCats(), reload()])} />
     </>
   );
 }

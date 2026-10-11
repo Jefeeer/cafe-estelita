@@ -15,6 +15,7 @@ const NAV: { href: string; label: string; short: string; icon: IconName }[] = [
   { href: '/admin/menu', label: 'Menu', short: 'Menu', icon: 'menu' },
   { href: '/admin/gallery', label: 'Gallery', short: 'Gallery', icon: 'image' },
   { href: '/admin/hours', label: 'Opening Hours', short: 'Hours', icon: 'clock' },
+  { href: '/admin/content', label: 'Website Content', short: 'Content', icon: 'layout' },
 ];
 
 type Toast = { id: number; msg: string; tone: 'ok' | 'err' };
@@ -120,12 +121,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
         {/* Bottom tabs (phones & tablets) */}
         <nav aria-label="Admin" className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          <ul className="mx-auto grid max-w-xl grid-cols-5">
+          <ul className="mx-auto grid max-w-xl grid-cols-6">
             {NAV.map((n) => (
               <li key={n.href}>
                 <Link href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}
                   className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${isActive(n.href) ? 'text-evergreen' : 'text-ink/55'}`}>
-                  <span className={`grid h-7 w-12 place-items-center rounded-full ${isActive(n.href) ? 'bg-fern/40' : ''}`}><Icon name={n.icon} /></span>{n.short}
+                  <span className={`grid h-7 w-11 place-items-center rounded-full ${isActive(n.href) ? 'bg-fern/40' : ''}`}><Icon name={n.icon} /></span>{n.short}
                 </Link>
               </li>
             ))}
